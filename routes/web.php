@@ -42,19 +42,9 @@ Route::middleware(['auth', 'role:teacher'])->prefix('guru')->name('teacher.')->g
 
 Route::get('/run-migrations', function () {
     try {
-        // Tentukan path ke file sqlite
-        $dbPath = database_path('database.sqlite');
-        
-        // Jika file belum ada, buat file kosong
-        if (!file_exists($dbPath)) {
-            touch($dbPath);
-        }
-
-        // Jalankan migrasi
         \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
-        
-        return 'File database.sqlite berhasil dibuat dan migrasi sukses!';
+        return 'Migrasi sukses! Database siap digunakan.';
     } catch (\Exception $e) {
-        return 'Error migrasi: ' . $e->getMessage();
+        return 'Error: ' . $e->getMessage();
     }
 });
