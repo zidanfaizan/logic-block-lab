@@ -42,9 +42,41 @@ Route::middleware(['auth', 'role:teacher'])->prefix('guru')->name('teacher.')->g
 
 Route::get('/run-migrations', function () {
     try {
+        $dbPath = config('database.connections.sqlite.database', database_path('database.sqlite'));
+        $dir = dirname($dbPath);
+        if (!is_dir($dir)) {
+            @mkdir($dir, 0777, true);
+        }
+        @chmod($dir, 0777);
+
+        $fileCreated = false;
+        if (!file_exists($dbPath)) {
+            @touch($dbPath);
+            @chmod($dbPath, 0666);
+            $fileCreated = true;
+        }
+
         \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
-        return 'Migrasi sukses! Database siap digunakan.';
-    } catch (\Exception $e) {
-        return 'Error: ' . $e->getMessage();
+        $migrateOutput = \Illuminate\Support\Facades\Artisan::output();
+
+        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
+        $seedOutput = \Illuminate\Support\Facades\Artisan::output();
+
+        \App\Services\QuestDataService::syncDatabase();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Database SQLite berhasil diinisialisasi, dimigrasi, dan di-seed!',
+            'database_path' => $dbPath,
+            'file_created' => $fileCreated,
+            'migrate_output' => trim($migrateOutput),
+            'seed_output' => trim($seedOutput),
+        ]);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
+        ], 500);
     }
 });

@@ -170,15 +170,39 @@
 
                     <div>
                         <label class="block text-xs md:text-sm font-bold text-slate-700 mb-1" for="reg-password">Kata Sandi</label>
-                        <input id="reg-password" type="password" name="password"
-                               placeholder="Minimal 6 karakter"
-                               class="field" minlength="6" required autocomplete="new-password">
+                        <div class="relative" x-data="{ show: false }">
+                            <input id="reg-password" :type="show ? 'text' : 'password'" name="password"
+                                   placeholder="Minimal 6 karakter"
+                                   class="field pr-11" minlength="6" required autocomplete="new-password">
+                            <button type="button" @click="show=!show"
+                                    :aria-label="show ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'"
+                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 rounded transition-colors">
+                                <svg x-show="!show" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                                </svg>
+                                <svg x-show="show" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:none">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19M1 1l22 22"/>
+                                </svg>
+                            </button>
+                        </div>
                     </div>
                     <div>
                         <label class="block text-xs md:text-sm font-bold text-slate-700 mb-1" for="reg-confirm">Ulangi Kata Sandi</label>
-                        <input id="reg-confirm" type="password" name="password_confirmation"
-                               placeholder="Ketik ulang kata sandi"
-                               class="field" required autocomplete="new-password">
+                        <div class="relative" x-data="{ show: false }">
+                            <input id="reg-confirm" :type="show ? 'text' : 'password'" name="password_confirmation"
+                                   placeholder="Ketik ulang kata sandi"
+                                   class="field pr-11" required autocomplete="new-password">
+                            <button type="button" @click="show=!show"
+                                    :aria-label="show ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'"
+                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 rounded transition-colors">
+                                <svg x-show="!show" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                                </svg>
+                                <svg x-show="show" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:none">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19M1 1l22 22"/>
+                                </svg>
+                            </button>
+                        </div>
                     </div>
                 </div>
 

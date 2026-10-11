@@ -14,15 +14,17 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // ── Seed Demo Users ─────────────────────────────────────
-        $teacher = User::create([
-            'name'      => 'Bu Sari Dewi',
-            'username'  => 'busari',
-            'email'     => 'guru@logicblocklab.id',
-            'password'  => Hash::make('guru123'),
-            'role'      => 'teacher',
-            'avatar'    => 'teacher_01.png',
-            'sekolah'   => 'SDN Nusantara 01',
-        ]);
+        User::firstOrCreate(
+            ['username' => 'busari'],
+            [
+                'name'      => 'Bu Sari Dewi',
+                'email'     => 'guru@logicblocklab.id',
+                'password'  => Hash::make('guru123'),
+                'role'      => 'teacher',
+                'avatar'    => 'teacher_01.png',
+                'sekolah'   => 'SDN Nusantara 01',
+            ]
+        );
 
         $studentsData = [
             ['name' => 'Budi Santoso',    'username' => 'budi',   'kelas' => '4A', 'stars' => 12, 'xp' => 450, 'level' => 3],
@@ -32,26 +34,26 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($studentsData as $idx => $s) {
-            User::create([
-                'name'         => $s['name'],
-                'username'     => $s['username'],
-                'email'        => "{$s['username']}@student.id",
-                'password'     => Hash::make('siswa123'),
-                'role'         => 'student',
-                'kelas'        => $s['kelas'],
-                'sekolah'      => 'SDN Nusantara 01',
-                'avatar'       => 'student_0' . ($idx + 1) . '.png',
-                'total_stars'  => $s['stars'],
-                'total_xp'     => $s['xp'],
-                'level'        => $s['level'],
-                'streak_days'  => rand(1, 5),
-            ]);
+            User::firstOrCreate(
+                ['username' => $s['username']],
+                [
+                    'name'         => $s['name'],
+                    'email'        => "{$s['username']}@student.id",
+                    'password'     => Hash::make('siswa123'),
+                    'role'         => 'student',
+                    'kelas'        => $s['kelas'],
+                    'sekolah'      => 'SDN Nusantara 01',
+                    'avatar'       => 'student_0' . ($idx + 1) . '.png',
+                    'total_stars'  => $s['stars'],
+                    'total_xp'     => $s['xp'],
+                    'level'        => $s['level'],
+                    'streak_days'  => rand(1, 5),
+                ]
+            );
         }
 
         // ── Seed Quests via QuestDataService ────────────────────
-        foreach (\App\Services\QuestDataService::getQuests() as $questData) {
-            Quest::create($questData);
-        }
+        \App\Services\QuestDataService::syncDatabase();
 
         // ── Seed Badges ─────────────────────────────────────────
         $badges = [
@@ -79,7 +81,7 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($badges as $badge) {
-            Badge::create($badge);
+            Badge::firstOrCreate(['slug' => $badge['slug']], $badge);
         }
     }
 }
