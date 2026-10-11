@@ -39,3 +39,12 @@ Route::middleware(['auth', 'role:teacher'])->prefix('guru')->name('teacher.')->g
     Route::get('/dashboard',             [TeacherController::class, 'dashboard'])->name('dashboard');
     Route::get('/siswa/{student}',       [TeacherController::class, 'studentDetail'])->name('student.detail');
 });
+
+Route::get('/run-migrations', function () {
+    try {
+        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+        return 'Migrasi database berhasil! Tabel sudah dibuat.';
+    } catch (\Exception $e) {
+        return 'Error migrasi: ' . $e->getMessage();
+    }
+});
