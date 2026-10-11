@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detektif Bug: Server Defense Arena</title>
+    <style>
+        :root {
+            --bg-base: #090d16;
+            --surface-glass: rgba(255, 255, 255, 0.08);
+            --surface-glass-active: rgba(255, 255, 255, 0.16);
+            --border-glass: rgba(255, 255, 255, 0.14);
+            --border-glow: rgba(56, 189, 248, 0.45);
+            --color-text-main: #f8fafc;
+            --color-text-muted: #94a3b8;
+            --color-accent-cyan: #38bdf8;
+            --color-accent-rose: #f43f5e;
+            --color-accent-emerald: #10b981;
+            --color-accent-amber: #f59e0b;
+            --font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-base);
+            background-image: 
+                radial-gradient(circle at 20% 20%, rgba(56, 189, 248, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(244, 63, 94, 0.15) 0%, transparent 45%),
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 32px 32px, 32px 32px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--color-text-main);
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        /* ── Main App Shell ── */
+        .game-wrapper {
+            width: 100%;
+            max-width: 580px;
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glass);
+            border-radius: 28px;
+            padding: 28px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 30px rgba(56, 189, 248, 0.1);
+            position: relative;
+        }
+
+        /* ── Header & HUD ── */
+        .hud-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 22px;
+            padding-bottom: 18px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .hud-title-group h1 {
+            font-size: 1.25rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .hud-title-group p {
+            font-size: 0.78rem;
+            color: var(--color-text-muted);
+            margin-top: 4px;
+        }
+
+        .badge-live {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 9999px;
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.35);
+            color: var(--color-accent-emerald);
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .pulse-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--color-accent-emerald);
+            box-shadow: 0 0 8px var(--color-accent-emerald);
+            animation: pulseGlow 1.4s infinite;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.8); }
+        }
+
+        /* ── Metric Indicators ── */
+        .metrics-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-bottom: 22px;
+        }
+
+        .metric-card {
+            background: var(--surface-glass);
+            border: 1px solid var(--border-glass);
+            border-radius: 18px;
+            padding: 14px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .metric-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .metric-label {
+            font-size: 0.72rem;
+            color: var(--color-text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .metric-value {
+            font-size: 1.75rem;
+            font-weight: 900;
+            font-feature-settings: "tnum";
+            font-variant-numeric: tabular-nums;
+            margin-top: 2px;
+        }
+
+        .val-score { color: #f8fafc; }
+        .val-timer { color: var(--color-accent-cyan); }
+        .val-timer.critical {
+            color: var(--color-accent-rose);
+            animation: timerWarn 0.8s infinite;
+        }
+
+        @keyframes timerWarn {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.06); }
+        }
+
+        /* Timer Bar */
+        .timer-progress-track {
+            width: 100%;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 9999px;
+            margin-bottom: 22px;
+            overflow: hidden;
+        }
+
+        .timer-progress-fill {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, var(--color-accent-cyan), var(--color-accent-emerald));
+            border-radius: 9999px;
+            transition: width 0.2s linear, background 0.3s ease;
+        }
+
+        .timer-progress-fill.warning {
+            background: linear-gradient(90deg, var(--color-accent-amber), var(--color-accent-rose));
+        }
+
+        /* ── 3x3 Server Grid Arena ── */
+        .server-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+
+        .server-block {
+            aspect-ratio: 1 / 1;
+            background: var(--surface-glass);
+            border: 1px solid var(--border-glass);
+            border-radius: 20px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            overflow: hidden;
+            transition: transform 0.15s ease, background 0.2s ease, border-color 0.2s ease;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .server-block:hover {
+            background: var(--surface-glass-active);
+            border-color: rgba(255, 255, 255, 0.24);
+        }
+
+        .server-block:active {
+            transform: scale(0.97);
+        }
+
+        /* Sub-decorations in block */
+        .server-block-meta {
+            position: absolute;
+            top: 10px;
+            left: 12px;
+            right: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            pointer-events: none;
+            opacity: 0.5;
+        }
+
+        .server-tag {
+            font-size: 0.62rem;
+            font-family: monospace;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            color: var(--color-text-muted);
+        }
+
+        .server-led {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transition: all 0.2s ease;
+        }
+
+        .server-block.has-bug .server-led {
+            background: var(--color-accent-rose);
+            box-shadow: 0 0 8px var(--color-accent-rose);
+        }
+
+        /* ── Bug SVG Entity ── */
+        .bug-entity {
+            width: 66%;
+            height: 66%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 10;
+            cursor: pointer;
+            animation: bugPopIn 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            filter: drop-shadow(0 6px 12px rgba(244, 63, 94, 0.45));
+            transition: transform 0.1s ease;
+        }
+
+        .bug-entity:hover {
+            transform: scale(1.08);
+        }
+
+        .bug-entity svg {
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+        }
+
+        @keyframes bugPopIn {
+            0% {
+                transform: scale(0.2) rotate(-15deg);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1) rotate(0deg);
+                opacity: 1;
+            }
+        }
+
+        /* Bug Disintegration Destruction Animation */
+        .bug-entity.destroyed {
+            animation: bugDestroy 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
+            pointer-events: none;
+        }
+
+        @keyframes bugDestroy {
+            0% {
+                transform: scale(1) rotate(0deg);
+                opacity: 1;
+                filter: brightness(2) drop-shadow(0 0 16px #f43f5e);
+            }
+            50% {
+                transform: scale(1.3) rotate(20deg);
+                opacity: 0.8;
+                filter: brightness(2.5) drop-shadow(0 0 24px #ffffff);
+            }
+            100% {
+                transform: scale(0.1) rotate(-45deg);
+                opacity: 0;
+                filter: blur(8px);
+            }
+        }
+
+        /* Score Splash Indicator */
+        .floating-score {
+            position: absolute;
+            font-size: 1.15rem;
+            font-weight: 900;
+            color: #38bdf8;
+            text-shadow: 0 0 12px rgba(56, 189, 248, 0.8);
+            pointer-events: none;
+            z-index: 20;
+            animation: floatUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+
+        @keyframes floatUp {
+            0% {
+                opacity: 1;
+                transform: translateY(0) scale(0.8);
+            }
+            50% {
+                opacity: 1;
+                transform: translateY(-20px) scale(1.15);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-38px) scale(1);
+            }
+        }
+
+        /* ── Frosted Modal Dialog ── */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(5, 8, 16, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-card {
+            width: 100%;
+            max-width: 440px;
+            background: rgba(30, 41, 59, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            backdrop-filter: blur(28px);
+            -webkit-backdrop-filter: blur(28px);
+            border-radius: 28px;
+            padding: 36px 30px;
+            text-align: center;
+            box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.8), 0 0 40px rgba(56, 189, 248, 0.15);
+            transform: scale(0.9) translateY(20px);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .modal-overlay.active .modal-card {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-icon-badge {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 16px;
+            border-radius: 20px;
+            background: rgba(56, 189, 248, 0.15);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--color-accent-cyan);
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            margin-bottom: 6px;
+            color: #ffffff;
+        }
+
+        .modal-subtitle {
+            font-size: 0.82rem;
+            color: var(--color-text-muted);
+            margin-bottom: 24px;
+        }
+
+        .stats-summary {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 18px;
+            padding: 16px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 26px;
+        }
+
+        .summary-item {
+            text-align: center;
+        }
+
+        .summary-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--color-text-muted);
+        }
+
+        .summary-val {
+            font-size: 1.6rem;
+            font-weight: 900;
+            margin-top: 3px;
+        }
+
+        .summary-val.score { color: var(--color-accent-cyan); }
+        .summary-val.bugs { color: var(--color-accent-rose); }
+
+        /* Modern Tactile Button */
+        .btn-restart {
+            width: 100%;
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 800;
+            letter-spacing: 0.02em;
+            padding: 14px 24px;
+            border-radius: 16px;
+            cursor: pointer;
+            box-shadow: 0 8px 20px -4px rgba(2, 132, 199, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .btn-restart:hover {
+            transform: translateY(-2px);
+            background: linear-gradient(135deg, #0369a1 0%, #0284c7 100%);
+            box-shadow: 0 12px 24px -4px rgba(2, 132, 199, 0.65);
+        }
+
+        .btn-restart:active {
+            transform: translateY(1px);
+        }
+
+        /* SVG helper icon sizing */
+        .icon-svg {
+            display: inline-block;
+            vertical-align: middle;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+    </style>
+</head>
+<body>
+
+    <main class="game-wrapper" role="region" aria-label="Arena Pembasmi Bug Server">
+        <!-- ── Header ── -->
+        <header class="hud-header">
+            <div class="hud-title-group">
+                <h1>
+                    <svg class="icon-svg" width="22" height="22" viewBox="0 0 24 24" style="color: var(--color-accent-cyan);">
+                        <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+                        <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+                        <line x1="6" y1="6" x2="6.01" y2="6"></line>
+                        <line x1="6" y1="18" x2="6.01" y2="18"></line>
+                    </svg>
+                    Server Defense Arena
+                </h1>
+                <p>Bersihkan serangga kode sebelum merusak integritas data</p>
+            </div>
+            <div class="badge-live" aria-live="polite">
+                <span class="pulse-dot"></span>
+                <span>Active</span>
+            </div>
+        </header>
+
+        <!-- ── Metrics HUD ── -->
+        <section class="metrics-row" aria-label="Status Permainan">
+            <div class="metric-card">
+                <div class="metric-info">
+                    <span class="metric-label">
+                        <svg class="icon-svg" width="14" height="14" viewBox="0 0 24 24">
+                            <circle cx="12" cy="8" r="7"></circle>
+                            <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
+                        </svg>
+                        Skor
+                    </span>
+                    <span class="metric-value val-score" id="scoreDisplay">0</span>
+                </div>
+                <svg class="icon-svg" width="28" height="28" viewBox="0 0 24 24" style="color: rgba(255,255,255,0.18);">
+                    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
+                    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
+                    <path d="M4 22h16"></path>
+                    <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path>
+                    <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path>
+                    <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path>
+                </svg>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-info">
+                    <span class="metric-label">
+                        <svg class="icon-svg" width="14" height="14" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        Waktu
+                    </span>
+                    <span class="metric-value val-timer" id="timerDisplay">30s</span>
+                </div>
+                <svg class="icon-svg" width="28" height="28" viewBox="0 0 24 24" style="color: rgba(56, 189, 248, 0.2);">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+            </div>
+        </section>
+
+        <!-- Progress Gauge -->
+        <div class="timer-progress-track">
+            <div class="timer-progress-fill" id="timerProgress"></div>
+        </div>
+
+        <!-- ── 3x3 Grid Arena ── -->
+        <div class="server-grid" id="gridContainer" role="grid" aria-label="Blok Server Grid 3x3">
+            <!-- 9 Blocks will be populated dynamically -->
+        </div>
+    </main>
+
+    <!-- ── Frosted Glass Game Over Modal ── -->
+    <div class="modal-overlay" id="resultModal" role="dialog" aria-modal="true" aria-labelledby="modalHeading">
+        <div class="modal-card">
+            <div class="modal-icon-badge">
+                <svg class="icon-svg" width="32" height="32" viewBox="0 0 24 24">
+                    <path d="M12 2v4"></path>
+                    <path d="m4.93 4.93 2.83 2.83"></path>
+                    <path d="M2 12h4"></path>
+                    <path d="m4.93 19.07 2.83-2.83"></path>
+                    <path d="M12 22v-4"></path>
+                    <path d="m19.07 19.07-2.83-2.83"></path>
+                    <path d="M22 12h-4"></path>
+                    <path d="m19.07 4.93-2.83 2.83"></path>
+                </svg>
+            </div>
+
+            <h2 class="modal-title" id="modalHeading">Sesi Selesai!</h2>
+            <p class="modal-subtitle">Integritas server berhasil dipertahankan.</p>
+
+            <div class="stats-summary">
+                <div class="summary-item">
+                    <div class="summary-label">Skor Akhir</div>
+                    <div class="summary-val score" id="finalScoreDisplay">0</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Bug Dibasmi</div>
+                    <div class="summary-val bugs" id="finalBugsDisplay">0</div>
+                </div>
+            </div>
+
+            <button class="btn-restart" id="btnRestart">
+                <svg class="icon-svg" width="18" height="18" viewBox="0 0 24 24">
+                    <polyline points="23 4 23 10 17 10"></polyline>
+                    <polyline points="1 20 1 14 7 14"></polyline>
+                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                </svg>
+                Main Lagi
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // ── Synthesized Audio Engine (No external asset dependency) ──
+        const AudioFX = {
+            ctx: null,
+            init() {
+                if (!this.ctx) {
+                    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                    if (AudioContextClass) this.ctx = new AudioContextClass();
+                }
+            },
+            playHit() {
+                this.init();
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(420, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(880, this.ctx.currentTime + 0.12);
+                gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.12);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.12);
+            },
+            playAppear() {
+                this.init();
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(260, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(380, this.ctx.currentTime + 0.08);
+                gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.08);
+            },
+            playEnd() {
+                this.init();
+                if (!this.ctx) return;
+                [440, 554, 659].forEach((freq, idx) => {
+                    setTimeout(() => {
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                        gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.25);
+                        osc.connect(gain);
+                        gain.connect(this.ctx.destination);
+                        osc.start();
+                        osc.stop(this.ctx.currentTime + 0.25);
+                    }, idx * 100);
+                });
+            }
+        };
+
+        // ── Custom Pure SVG Bug Markup ──
+        function generateBugSvg() {
+            return `
+                <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Digital Bug Entity">
+                    <!-- Outer Soft Glow Shadow -->
+                    <circle cx="32" cy="34" r="22" fill="#f43f5e" opacity="0.16"/>
+                    <!-- Antennae -->
+                    <path d="M26 18 L19 9" stroke="#fda4af" stroke-width="2.5" stroke-linecap="round"/>
+                    <circle cx="19" cy="9" r="2" fill="#ffe4e6"/>
+                    <path d="M38 18 L45 9" stroke="#fda4af" stroke-width="2.5" stroke-linecap="round"/>
+                    <circle cx="45" cy="9" r="2" fill="#ffe4e6"/>
+                    <!-- Legs: Left Side -->
+                    <path d="M18 27 L9 24" stroke="#f43f5e" stroke-width="2.5" stroke-linecap="round"/>
+                    <path d="M17 35 L7 35" stroke="#f43f5e" stroke-width="2.5" stroke-linecap="round"/>
+                    <path d="M18 43 L9 47" stroke="#f43f5e" stroke-width="2.5" stroke-linecap="round"/>
+                    <!-- Legs: Right Side -->
+                    <path d="M46 27 L55 24" stroke="#f43f5e" stroke-width="2.5" stroke-linecap="round"/>
+                    <path d="M47 35 L57 35" stroke="#f43f5e" stroke-width="2.5" stroke-linecap="round"/>
+                    <path d="M46 43 L55 47" stroke="#f43f5e" stroke-width="2.5" stroke-linecap="round"/>
+                    <!-- Head & Terminal Sensor -->
+                    <path d="M24 23 C24 17 40 17 40 23 Z" fill="#e11d48"/>
+                    <!-- Cyber Carapace Body -->
+                    <rect x="20" y="24" width="24" height="25" rx="10" fill="url(#bugGradient)" stroke="#fda4af" stroke-width="1.8"/>
+                    <!-- Glowing Core Microchip Grid -->
+                    <line x1="32" y1="26" x2="32" y2="46" stroke="#ffe4e6" stroke-width="1.5" stroke-dasharray="2 2"/>
+                    <rect x="28" y="32" width="8" height="8" rx="2" fill="#ffffff" opacity="0.9"/>
+                    <!-- Gradients -->
+                    <defs>
+                        <linearGradient id="bugGradient" x1="20" y1="24" x2="44" y2="49" gradientUnits="userSpaceOnUse">
+                            <stop stop-color="#fb7185"/>
+                            <stop offset="1" stop-color="#e11d48"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+            `;
+        }
+
+        // ── Game State Controller ──
+        class BugHunterGame {
+            constructor() {
+                this.gridSize = 9;
+                this.initialDuration = 30; // 30 seconds
+                this.remainingTime = this.initialDuration;
+                this.score = 0;
+                this.bugsDefeated = 0;
+                this.activeBugSlot = null;
+                this.spawnTimerId = null;
+                this.countdownIntervalId = null;
+                this.isGameActive = false;
+
+                // Elements
+                this.gridContainer = document.getElementById('gridContainer');
+                this.scoreDisplay = document.getElementById('scoreDisplay');
+                this.timerDisplay = document.getElementById('timerDisplay');
+                this.timerProgress = document.getElementById('timerProgress');
+                this.resultModal = document.getElementById('resultModal');
+                this.finalScoreDisplay = document.getElementById('finalScoreDisplay');
+                this.finalBugsDisplay = document.getElementById('finalBugsDisplay');
+                this.btnRestart = document.getElementById('btnRestart');
+
+                this.init();
+            }
+
+            init() {
+                this.buildGrid();
+                this.btnRestart.addEventListener('click', () => this.startGame());
+                this.startGame();
+            }
+
+            buildGrid() {
+                this.gridContainer.innerHTML = '';
+                for (let i = 0; i < this.gridSize; i++) {
+                    const block = document.createElement('div');
+                    block.className = 'server-block';
+                    block.id = `block-${i}`;
+                    block.setAttribute('role', 'gridcell');
+                    block.setAttribute('aria-label', `Blok Server ${i + 1}`);
+
+                    // Server Metadata UI
+                    const meta = document.createElement('div');
+                    meta.className = 'server-block-meta';
+                    meta.innerHTML = `
+                        <span class="server-tag">SRV-0${i + 1}</span>
+                        <span class="server-led"></span>
+                    `;
+                    block.appendChild(meta);
+
+                    this.gridContainer.appendChild(block);
+                }
+            }
+
+            startGame() {
+                // Reset State
+                this.score = 0;
+                this.bugsDefeated = 0;
+                this.remainingTime = this.initialDuration;
+                this.isGameActive = true;
+                this.activeBugSlot = null;
+                this.clearActiveBugs();
+
+                // UI Updates
+                this.scoreDisplay.textContent = '0';
+                this.timerDisplay.textContent = `${this.remainingTime}s`;
+                this.timerDisplay.classList.remove('critical');
+                this.timerProgress.style.width = '100%';
+                this.timerProgress.classList.remove('warning');
+                this.resultModal.classList.remove('active');
+
+                // Clear previous loops
+                if (this.countdownIntervalId) clearInterval(this.countdownIntervalId);
+                if (this.spawnTimerId) clearTimeout(this.spawnTimerId);
+
+                // Start Timers
+                this.startCountdown();
+                this.scheduleNextSpawn();
+            }
+
+            startCountdown() {
+                this.countdownIntervalId = setInterval(() => {
+                    if (!this.isGameActive) return;
+
+                    this.remainingTime--;
+                    this.timerDisplay.textContent = `${this.remainingTime}s`;
+
+                    const progressPct = (this.remainingTime / this.initialDuration) * 100;
+                    this.timerProgress.style.width = `${Math.max(0, progressPct)}%`;
+
+                    if (this.remainingTime <= 10) {
+                        this.timerDisplay.classList.add('critical');
+                        this.timerProgress.classList.add('warning');
+                    }
+
+                    if (this.remainingTime <= 0) {
+                        this.endGame();
+                    }
+                }, 1000);
+            }
+
+            scheduleNextSpawn() {
+                if (!this.isGameActive) return;
+
+                // Random Interval: 800ms to 1500ms
+                const interval = Math.floor(Math.random() * (1500 - 800 + 1)) + 800;
+
+                this.spawnTimerId = setTimeout(() => {
+                    if (!this.isGameActive) return;
+                    this.spawnBug();
+                    this.scheduleNextSpawn();
+                }, interval);
+            }
+
+            clearActiveBugs() {
+                document.querySelectorAll('.server-block').forEach(block => {
+                    block.classList.remove('has-bug');
+                    const existing = block.querySelector('.bug-entity');
+                    if (existing) existing.remove();
+                });
+                this.activeBugSlot = null;
+            }
+
+            spawnBug() {
+                // Clean prior bug if any
+                this.clearActiveBugs();
+
+                // Pick random slot (0 to 8)
+                const randomSlot = Math.floor(Math.random() * this.gridSize);
+                const targetBlock = document.getElementById(`block-${randomSlot}`);
+                if (!targetBlock) return;
+
+                this.activeBugSlot = randomSlot;
+                targetBlock.classList.add('has-bug');
+
+                // Create SVG Bug Entity
+                const bugEntity = document.createElement('div');
+                bugEntity.className = 'bug-entity';
+                bugEntity.innerHTML = generateBugSvg();
+
+                // Click Handler
+                bugEntity.addEventListener('pointerdown', (e) => {
+                    e.stopPropagation();
+                    this.handleBugEliminated(targetBlock, bugEntity);
+                });
+
+                targetBlock.appendChild(bugEntity);
+                AudioFX.playAppear();
+
+                // Bug lifetime before escaping: 900ms - 1300ms
+                const bugLifetime = Math.floor(Math.random() * (1300 - 900 + 1)) + 900;
+                setTimeout(() => {
+                    if (this.activeBugSlot === randomSlot && !bugEntity.classList.contains('destroyed')) {
+                        bugEntity.style.opacity = '0';
+                        bugEntity.style.transform = 'scale(0.5)';
+                        setTimeout(() => this.clearActiveBugs(), 150);
+                    }
+                }, bugLifetime);
+            }
+
+            handleBugEliminated(parentBlock, bugElement) {
+                if (!this.isGameActive || bugElement.classList.contains('destroyed')) return;
+
+                // Audio and Visual Feedback
+                AudioFX.playHit();
+                bugElement.classList.add('destroyed');
+                parentBlock.classList.remove('has-bug');
+
+                // Score increment
+                this.score += 10;
+                this.bugsDefeated += 1;
+                this.scoreDisplay.textContent = this.score;
+
+                // Floating Score Splash Animation
+                this.showFloatingScore(parentBlock, '+10');
+
+                // Remove DOM node after animation finishes
+                setTimeout(() => {
+                    bugElement.remove();
+                    if (this.activeBugSlot === parseInt(parentBlock.id.replace('block-', ''))) {
+                        this.activeBugSlot = null;
+                    }
+                }, 300);
+            }
+
+            showFloatingScore(parentBlock, text) {
+                const splash = document.createElement('div');
+                splash.className = 'floating-score';
+                splash.textContent = text;
+                parentBlock.appendChild(splash);
+
+                setTimeout(() => splash.remove(), 600);
+            }
+
+            endGame() {
+                this.isGameActive = false;
+                if (this.countdownIntervalId) clearInterval(this.countdownIntervalId);
+                if (this.spawnTimerId) clearTimeout(this.spawnTimerId);
+                this.clearActiveBugs();
+
+                AudioFX.playEnd();
+
+                // Populate modal
+                this.finalScoreDisplay.textContent = this.score;
+                this.finalBugsDisplay.textContent = this.bugsDefeated;
+                this.resultModal.classList.add('active');
+            }
+        }
+
+        // Initialize when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            new BugHunterGame();
+        });
+    </script>
+</body>
+</html>
