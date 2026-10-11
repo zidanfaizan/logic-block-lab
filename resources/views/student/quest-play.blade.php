@@ -146,6 +146,20 @@
     }
     .shake-active { animation: screenShake 0.4s ease-in-out; }
 
+    /* Interactive Drag-and-Drop & Arcade Gadget Styles */
+    .interactive-slot {
+        transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .draggable-card {
+        cursor: grab;
+        user-select: none;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .draggable-card:active {
+        cursor: grabbing;
+        transform: scale(0.96);
+    }
+
     /* Result Modal Overlay */
     .result-overlay {
         position: fixed;
@@ -179,26 +193,30 @@
         <span x-text="levelToastMessage"></span>
     </div>
 
-    {{-- ─── HEADER BAR WITH RICH DIFFICULTY METRICS ─── --}}
-    <div class="flex flex-wrap items-center justify-between gap-4 mb-6 bg-white rounded-3xl p-4 md:p-6 shadow-sm border border-gray-100">
+    {{-- ─── HEADER BAR WITH CARTOON NETWORK STYLING & GAME ARTWORK ─── --}}
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-6 bg-white rounded-3xl p-4 md:p-5 border-3 border-slate-900 shadow-[0_6px_0_#0f172a]">
         <div class="flex items-center gap-4">
             <a href="{{ route('student.quests') }}"
-               class="px-4 py-2 rounded-2xl bg-gray-100 hover:bg-gray-200 transition-all text-gray-700 font-bold flex items-center gap-2">
+               class="btn-cn bg-yellow-400 text-slate-900 px-3.5 py-2 text-sm flex items-center gap-1.5">
                 <span>←</span> Keluar
             </a>
+
+            {{-- Game Mini Cover Picture --}}
+            <div class="w-16 h-12 rounded-xl overflow-hidden border-2 border-slate-900 shadow-[0_2px_0_#0f172a] flex-shrink-0 bg-slate-900">
+                <img src="{{ $quest->thumbnail_url }}" alt="{{ $quest->title }}" class="w-full h-full object-cover">
+            </div>
+
             <div>
-                <div class="flex items-center gap-2 text-xs font-bold text-gray-500">
-                    <span>{{ $quest->category_icon }} {{ $quest->category_label }}</span>
-                    <span>•</span>
-                    <span class="{{ $quest->difficulty_color }} px-3 py-0.5 rounded-full font-black text-xs">
-                        Tingkat: {{ $quest->difficulty_label }} (Level {{ $quest->difficulty }})
+                <div class="flex items-center gap-2 text-xs font-bold text-slate-600">
+                    <span class="cn-sticker bg-yellow-300 text-slate-900 text-[10px]">{{ $quest->category_label }}</span>
+                    <span class="cn-sticker {{ $quest->difficulty === 1 ? 'bg-emerald-400 text-slate-900' : ($quest->difficulty === 2 ? 'bg-amber-400 text-slate-900' : 'bg-rose-500 text-white') }} text-[10px]">
+                        {{ $quest->difficulty_label }}
                     </span>
-                    <span>•</span>
-                    <span class="bg-indigo-50 text-indigo-700 px-2.5 py-0.5 rounded-full font-extrabold text-xs">
-                        Kelas {{ $quest->min_grade }}-{{ $quest->max_grade }} SD
+                    <span class="hidden md:inline-block cn-sticker bg-indigo-100 text-indigo-900 text-[10px]">
+                        Kelas {{ $quest->min_grade }}-{{ $quest->max_grade }}
                     </span>
                 </div>
-                <h1 class="font-display text-2xl md:text-3xl text-gray-800 tracking-wide mt-1">{{ $quest->title }}</h1>
+                <h1 class="font-display text-xl md:text-2xl text-slate-900 tracking-wide mt-1">{{ $quest->title }}</h1>
             </div>
         </div>
 
@@ -378,17 +396,31 @@
                         </span>
                         <h3 class="font-display text-lg text-gray-800 mt-2 mb-4" x-text="stages[currentStage]?.title || 'Pecahkan Pola Berikut:'"></h3>
                         
-                        {{-- Holographic Sequence Grid --}}
-                        <div class="flex items-center justify-center gap-2.5 flex-wrap p-4 bg-gradient-to-r from-purple-50 via-indigo-50 to-purple-50 rounded-2xl border border-purple-100 shadow-inner">
+                        {{-- Holographic Sequence Grid with Interactive Drop Slot --}}
+                        <div class="flex items-center justify-center gap-2.5 flex-wrap p-4 bg-gradient-to-r from-purple-50 via-indigo-50 to-purple-50 rounded-2xl border border-purple-200 shadow-inner">
                             <template x-for="(item, idx) in stages[currentStage]?.sequence" :key="idx">
-                                <div class="w-14 h-14 rounded-2xl border-3 flex items-center justify-center font-display text-2xl shadow-sm transition-all"
-                                     :class="item === '?' ? 'border-primary bg-primary text-white scale-110 animate-pulse shadow-primary/50' : 'border-purple-200 bg-white text-purple-900'">
-                                    <span x-text="item"></span>
+                                <div>
+                                    <template x-if="item !== '?'">
+                                        <div class="w-13 h-13 rounded-2xl border-2.5 border-purple-300 bg-white text-purple-900 flex items-center justify-center font-display text-2xl shadow-sm">
+                                            <span x-text="item"></span>
+                                        </div>
+                                    </template>
+                                    <template x-if="item === '?'">
+                                        <div class="interactive-slot w-15 h-15 rounded-2xl border-3 border-dashed flex items-center justify-center font-display text-2xl shadow-md cursor-pointer relative"
+                                             :class="slottedPattern !== null ? 'border-purple-600 bg-purple-600 text-white scale-110 shadow-purple-500/50' : (dragOverPattern ? 'border-yellow-400 bg-yellow-200 scale-115 animate-bounce' : 'border-indigo-400 bg-indigo-50 text-indigo-500 animate-pulse')"
+                                             @dragover.prevent="dragOverPattern = true"
+                                             @dragleave="dragOverPattern = false"
+                                             @drop.prevent="dropPattern($event)"
+                                             @click="if(slottedPattern !== null && !stageAnswered) slottedPattern = null">
+                                            <span x-text="slottedPattern !== null ? slottedPattern.value : '?'"></span>
+                                            <span x-show="slottedPattern !== null && !stageAnswered" class="absolute -top-1.5 -right-1.5 bg-red-500 text-white w-4 h-4 rounded-full text-[10px] flex items-center justify-center shadow">✕</span>
+                                        </div>
+                                    </template>
                                 </div>
                             </template>
                         </div>
 
-                        <p class="text-xs font-bold text-purple-600 mt-3" x-text="`Petunjuk Deret: ${stages[currentStage]?.hint}`"></p>
+                        <p class="text-xs font-bold text-purple-600 mt-3" x-text="`💡 Petunjuk Deret: ${stages[currentStage]?.hint}`"></p>
                     </div>
                 </template>
 
@@ -525,67 +557,193 @@
             {{-- ── B. INTERACTIVE PUZZLE STAGES (IF-ELSE, PATTERN, LOOP) ── --}}
             <template x-if="questType !== 'grid_navigation'">
                 <div x-show="currentStage < stages.length">
-                    <h2 class="font-display text-lg text-gray-800 mb-3 flex items-center gap-2">
-                        <span>⚡</span> Evaluasi Logika & Tentukan Solusi:
-                    </h2>
 
-                    {{-- 1. IF-ELSE OPTIONS --}}
+                    {{-- ── 1. IF-ELSE DRAG & DROP DECISION WORKSPACE ── --}}
                     <template x-if="questType === 'if_else_puzzle'">
-                        <div class="grid gap-3">
-                            <template x-for="(option, idx) in stages[currentStage]?.options" :key="idx">
-                                <button @click="answerCondition(idx)"
-                                        :disabled="stageAnswered"
-                                        class="flex items-center gap-4 p-4 rounded-2xl border-3 font-bold text-left transition-all hover:scale-101 disabled:cursor-default"
-                                        :class="getOptionClass(idx)">
-                                    <span class="text-3xl" x-text="option.emoji"></span>
-                                    <div class="flex-1">
-                                        <p class="text-gray-900 text-sm md:text-base font-bold" x-text="option.text"></p>
+                        <div>
+                            <div class="flex items-center justify-between mb-3">
+                                <div>
+                                    <h2 class="font-display text-lg text-slate-800 flex items-center gap-2">
+                                        <span>🎯</span> Pasang Keputusan Logika (Drag &amp; Drop):
+                                    </h2>
+                                    <p class="text-xs text-slate-500 font-semibold">Tarik kartu solusi ke slot di bawah atau klik untuk memasang</p>
+                                </div>
+                                <span class="cn-sticker bg-sky-300 text-slate-900 text-[10px]">INTERAKTIF</span>
+                            </div>
+
+                            {{-- Interactive Decision Drop Socket --}}
+                            <div class="interactive-slot p-4 mb-4 rounded-2xl border-3 border-dashed transition-all"
+                                 :class="slottedCondition !== null ? 'bg-sky-50 border-sky-500 shadow-sm' : (dragOverCondition ? 'bg-yellow-100 border-yellow-400 scale-102' : 'bg-slate-50 border-slate-300')"
+                                 @dragover.prevent="dragOverCondition = true"
+                                 @dragleave="dragOverCondition = false"
+                                 @drop.prevent="dropCondition($event)">
+                                <div x-show="slottedCondition === null" class="text-center py-2.5 text-slate-400">
+                                    <span class="text-3xl block mb-1">📥</span>
+                                    <p class="font-display text-xs text-slate-600 uppercase">Slot Keputusan Logika Masih Kosong</p>
+                                    <p class="text-[11px] font-bold text-slate-400 mt-0.5">Tarik salah satu kartu aksi di bawah ke sini!</p>
+                                </div>
+                                <div x-show="slottedCondition !== null" class="flex items-center gap-3">
+                                    <span class="text-4xl flex-shrink-0" x-text="stages[currentStage]?.options[slottedCondition]?.emoji"></span>
+                                    <div class="flex-1 min-w-0">
+                                        <span class="cn-sticker bg-sky-400 text-slate-900 text-[9px] mb-1">KARTU TERPASANG</span>
+                                        <p class="font-display text-sm text-slate-900 leading-snug" x-text="stages[currentStage]?.options[slottedCondition]?.text"></p>
                                     </div>
-                                    <span class="ml-auto text-xl" x-show="stageAnswered && selectedAnswer === idx" x-text="option.correct ? '✅' : '❌'"></span>
-                                </button>
-                            </template>
+                                    <button x-show="!stageAnswered" @click="slottedCondition = null"
+                                            class="text-xs bg-red-100 text-red-600 hover:bg-red-200 px-2.5 py-1.5 rounded-xl font-bold flex-shrink-0">
+                                        ✕ Lepas
+                                    </button>
+                                </div>
+                            </div>
+
+                            {{-- Draggable Action Cards Tray --}}
+                            <div class="space-y-2.5 mb-4">
+                                <template x-for="(option, idx) in stages[currentStage]?.options" :key="idx">
+                                    <div draggable="true"
+                                         @dragstart="startDragCondition(idx, $event)"
+                                         @click="selectCondition(idx)"
+                                         class="draggable-card p-3.5 rounded-2xl border-2.5 font-bold text-left transition-all flex items-center gap-3 shadow-[0_2px_0_#0f172a] cursor-grab"
+                                         :class="slottedCondition === idx ? 'bg-sky-100 border-sky-600 ring-2 ring-sky-400' : 'bg-white border-slate-900 hover:bg-slate-50'">
+                                        <span class="text-3xl flex-shrink-0" x-text="option.emoji"></span>
+                                        <p class="text-slate-800 text-xs md:text-sm font-bold flex-1" x-text="option.text"></p>
+                                        <span class="text-[10px] font-display text-slate-400 hidden sm:inline">Tarik ➜</span>
+                                    </div>
+                                </template>
+                            </div>
+
+                            {{-- Action Button --}}
+                            <button @click="executeCondition()"
+                                    :disabled="slottedCondition === null || stageAnswered"
+                                    class="btn-cn w-full py-3 text-base text-white disabled:opacity-40"
+                                    :class="slottedCondition !== null && !stageAnswered ? 'bg-indigo-600 hover:bg-indigo-700 shadow-[0_4px_0_#0f172a]' : 'bg-slate-400'">
+                                <span>⚡</span> EVALUASI &amp; EKSEKUSI KEPUTUSAN
+                            </button>
 
                             {{-- Live Feedback Alert --}}
-                            <div x-show="stageAnswered" x-transition class="mt-3 p-4 rounded-2xl font-bold text-sm"
-                                 :class="lastAnswerCorrect ? 'bg-emerald-50 text-emerald-900 border-2 border-emerald-300' : 'bg-red-50 text-red-900 border-2 border-red-300'">
+                            <div x-show="stageAnswered" x-transition class="mt-4 p-4 rounded-2xl font-bold text-sm border-2"
+                                 :class="lastAnswerCorrect ? 'bg-emerald-50 text-emerald-900 border-emerald-400' : 'bg-red-50 text-red-900 border-red-400'">
                                 <p x-text="lastAnswerCorrect ? stages[currentStage]?.feedback_correct : stages[currentStage]?.feedback_wrong"></p>
                             </div>
                         </div>
                     </template>
 
-                    {{-- 2. PATTERN OPTIONS --}}
+                    {{-- ── 2. PATTERN DRAG & DROP DECODER WORKSPACE ── --}}
                     <template x-if="questType === 'pattern_completion'">
                         <div>
-                            <p class="font-bold text-gray-600 text-sm mb-3">Pilih nilai atau simbol berikutnya:</p>
-                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                                <template x-for="(opt, idx) in stages[currentStage]?.options" :key="idx">
-                                    <button @click="answerPattern(idx)"
-                                            :disabled="stageAnswered"
-                                            class="h-20 rounded-2xl border-3 font-display text-2xl transition-all hover:scale-105 disabled:cursor-default flex items-center justify-center shadow-sm"
-                                            :class="getPatternOptionClass(idx)">
-                                        <span x-text="opt"></span>
-                                    </button>
-                                </template>
+                            <div class="flex items-center justify-between mb-3">
+                                <div>
+                                    <h2 class="font-display text-lg text-slate-800 flex items-center gap-2">
+                                        <span>🧩</span> Pasang Keping Pola Dekoder:
+                                    </h2>
+                                    <p class="text-xs text-slate-500 font-semibold">Tarik balok teka-teki ke kotak [ ? ] di sebelah kiri atau klik</p>
+                                </div>
+                                <span class="cn-sticker bg-purple-300 text-slate-900 text-[10px]">DRAG &amp; DROP</span>
+                            </div>
+
+                            {{-- Draggable Pieces Tray --}}
+                            <div class="p-4 bg-purple-50/70 border-2.5 border-dashed border-purple-300 rounded-2xl mb-4">
+                                <p class="font-display text-xs text-purple-900 mb-2.5 uppercase">Koleksi Kepingan Pola Tersedia:</p>
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                    <template x-for="(opt, idx) in stages[currentStage]?.options" :key="idx">
+                                        <div draggable="true"
+                                             @dragstart="startDragPattern(opt, idx, $event)"
+                                             @click="selectPattern(opt, idx)"
+                                             class="draggable-card h-20 rounded-2xl border-2.5 font-display text-2xl flex flex-col items-center justify-center cursor-grab shadow-[0_3px_0_#0f172a] transition-all"
+                                             :class="slottedPattern?.idx === idx ? 'bg-yellow-300 border-slate-900 scale-105' : 'bg-white border-slate-900 hover:bg-yellow-100 text-purple-900'">
+                                            <span x-text="opt"></span>
+                                            <span class="text-[9px] font-sans font-extrabold text-slate-500">Tarik / Klik</span>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+
+                            {{-- Verification Trigger Button --}}
+                            <button @click="verifyPattern()"
+                                    :disabled="slottedPattern === null || stageAnswered"
+                                    class="btn-cn w-full py-3 text-base text-white disabled:opacity-40"
+                                    :class="slottedPattern !== null && !stageAnswered ? 'bg-purple-600 hover:bg-purple-700 shadow-[0_4px_0_#0f172a]' : 'bg-slate-400'">
+                                <span>✨</span> COCOKKAN &amp; UJI POLA DEKODER
+                            </button>
+
+                            {{-- Live Feedback Alert --}}
+                            <div x-show="stageAnswered" x-transition class="mt-4 p-4 rounded-2xl font-bold text-sm border-2"
+                                 :class="lastAnswerCorrect ? 'bg-emerald-50 text-emerald-900 border-emerald-400' : 'bg-red-50 text-red-900 border-red-400'">
+                                <p x-text="lastAnswerCorrect ? 'Brilian! Tebakan polamu cocok 100% dengan deret algoritma! 🌟' : `Kurang tepat! Kepingan yang pas adalah ${stages[currentStage]?.answer}. Coba pelajari petunjuknya!`"></p>
                             </div>
                         </div>
                     </template>
 
-                    {{-- 3. LOOP OPTIONS --}}
+                    {{-- ── 3. LOOP PROGRAMMING & SIMULATION WORKSPACE ── --}}
                     <template x-if="questType === 'loop_puzzle'">
                         <div>
-                            <p class="font-bold text-gray-700 text-sm mb-3">Tentukan angka pengulangan (Loop) yang benar:</p>
-                            <div class="grid grid-cols-4 gap-3 mb-4">
+                            <div class="flex items-center justify-between mb-3">
+                                <div>
+                                    <h2 class="font-display text-lg text-slate-800 flex items-center gap-2">
+                                        <span>⚙️</span> Rakit Perulangan Loop &amp; Uji Mesin:
+                                    </h2>
+                                    <p class="text-xs text-slate-500 font-semibold">Tarik chip angka perulangan ke slot program</p>
+                                </div>
+                                <span class="cn-sticker bg-emerald-300 text-slate-900 text-[10px]">SIMULATOR LOOP</span>
+                            </div>
+
+                            {{-- Interactive Code IDE with Drop Socket --}}
+                            <div class="bg-slate-900 text-white rounded-2xl p-4 border-3 border-slate-900 shadow-[0_4px_0_#0f172a] font-mono text-xs md:text-sm mb-4">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="text-amber-400 font-black">ULANGI</span>
+                                    {{-- Loop Socket --}}
+                                    <div class="interactive-slot inline-flex items-center justify-center min-w-[75px] h-9 px-3 rounded-xl border-2 border-dashed font-display text-lg cursor-pointer transition-all"
+                                         :class="slottedLoop !== null ? 'bg-amber-400 text-slate-900 border-amber-300 font-black' : (dragOverLoop ? 'bg-yellow-200 text-slate-900 border-yellow-400 scale-110' : 'bg-slate-800 text-amber-300 border-amber-400/60 animate-pulse')"
+                                         @dragover.prevent="dragOverLoop = true"
+                                         @dragleave="dragOverLoop = false"
+                                         @drop.prevent="dropLoop($event)"
+                                         @click="if(slottedLoop !== null && !simulatingLoop && !stageAnswered) slottedLoop = null">
+                                        <span x-text="slottedLoop !== null ? `${slottedLoop.value} KALI` : '[ ? KALI ]'"></span>
+                                    </div>
+                                    <span class="text-amber-400 font-black">LAKUKAN:</span>
+                                </div>
+                                <p class="ml-6 my-2 text-cyan-300 font-bold" x-text="`    ${stages[currentStage]?.correct_action?.replace(/_/g, ' ')?.toUpperCase()}()`"></p>
+                                <span class="text-amber-400 font-black">SELESAI_LOOP</span>
+                            </div>
+
+                            {{-- Loop Chips Tray --}}
+                            <p class="font-bold text-xs text-slate-600 mb-2">Tarik angka pengulangan ke slot atau klik:</p>
+                            <div class="grid grid-cols-4 gap-2.5 mb-4">
                                 <template x-for="(opt, idx) in stages[currentStage]?.options_repeat" :key="idx">
-                                    <button @click="answerLoop(idx)"
-                                            :disabled="stageAnswered"
-                                            class="h-16 rounded-2xl border-3 font-display text-2xl transition-all hover:scale-105 disabled:cursor-default flex items-center justify-center shadow-sm"
-                                            :class="getLoopOptionClass(idx)">
+                                    <div draggable="true"
+                                         @dragstart="startDragLoop(opt, idx, $event)"
+                                         @click="selectLoop(opt, idx)"
+                                         class="draggable-card h-16 rounded-xl border-2.5 border-slate-900 font-display text-2xl flex flex-col items-center justify-center cursor-grab shadow-[0_3px_0_#0f172a] transition-all"
+                                         :class="slottedLoop?.idx === idx ? 'bg-emerald-400 text-slate-900 scale-105' : 'bg-white text-slate-800 hover:bg-emerald-50'">
                                         <span x-text="opt"></span>
-                                    </button>
+                                        <span class="text-[9px] font-sans font-extrabold text-slate-500">Putaran</span>
+                                    </div>
                                 </template>
                             </div>
-                            <div class="p-3 bg-gray-50 rounded-xl border border-gray-200 text-xs font-semibold text-gray-600"
-                                 x-text="`Petunjuk Perhitungan: ${stages[currentStage]?.hint}`"></div>
+
+                            {{-- Live Step Simulation Gauge --}}
+                            <div x-show="simulatingLoop || stageAnswered" class="p-3 bg-emerald-50 border-2 border-emerald-400 rounded-xl mb-3">
+                                <div class="flex justify-between text-xs font-display text-emerald-900 mb-1">
+                                    <span>Simulasi Mesin Berputar:</span>
+                                    <span x-text="`Putaran ${currentLoopStep} / ${slottedLoop?.value || 0}`"></span>
+                                </div>
+                                <div class="w-full bg-emerald-200 h-3 rounded-full overflow-hidden border border-emerald-400">
+                                    <div class="bg-emerald-500 h-full transition-all duration-150"
+                                         :style="`width: ${(currentLoopStep / (slottedLoop?.value || 1)) * 100}%`"></div>
+                                </div>
+                            </div>
+
+                            {{-- Simulation Trigger Button --}}
+                            <button @click="runLoopSimulation()"
+                                    :disabled="slottedLoop === null || simulatingLoop || stageAnswered"
+                                    class="btn-cn w-full py-3 text-base text-white disabled:opacity-40"
+                                    :class="slottedLoop !== null && !stageAnswered ? 'bg-emerald-500 hover:bg-emerald-600 shadow-[0_4px_0_#0f172a]' : 'bg-slate-400'">
+                                <span x-text="simulatingLoop ? '⏳ MESIN SEDANG BERPUTAR...' : '⚙️ JALANKAN SIMULASI MESIN LOOP'"></span>
+                            </button>
+
+                            {{-- Live Feedback Alert --}}
+                            <div x-show="stageAnswered" x-transition class="mt-4 p-4 rounded-2xl font-bold text-sm border-2"
+                                 :class="lastAnswerCorrect ? 'bg-emerald-50 text-emerald-900 border-emerald-400' : 'bg-red-50 text-red-900 border-red-400'">
+                                <p x-text="lastAnswerCorrect ? 'Hebat! Kalkulasi pengulangan tepat dan tugas selesai efisien!' : `Kurang tepat! Pengulangan yang dibutuhkan adalah ${stages[currentStage]?.correct_repeat} kali.`"></p>
+                            </div>
                         </div>
                     </template>
                 </div>
@@ -833,6 +991,16 @@ function BlocklyGame() {
         selectedAnswer: null,
         correctAnswers: 0,
 
+        // Interactive Drag & Drop / Slot State
+        slottedPattern: null,
+        dragOverPattern: false,
+        slottedLoop: null,
+        dragOverLoop: false,
+        simulatingLoop: false,
+        currentLoopStep: 0,
+        slottedCondition: null,
+        dragOverCondition: false,
+
         // Results State
         hintsUsed: 0,
         currentHint: '',
@@ -1068,67 +1236,125 @@ function BlocklyGame() {
             }
         },
 
-        // ── Stage Handlers (Non-Grid) ──
-        answerCondition(idx) {
+        // ── 1. Condition (IF-ELSE) Handlers ──
+        startDragCondition(idx, ev) {
             if (this.stageAnswered) return;
+            ev.dataTransfer.setData('text/plain', JSON.stringify({type: 'condition', idx: idx}));
+        },
+        dropCondition(ev) {
+            this.dragOverCondition = false;
+            if (this.stageAnswered) return;
+            try {
+                const data = JSON.parse(ev.dataTransfer.getData('text/plain'));
+                if (data.type === 'condition' && data.idx !== undefined) {
+                    this.selectCondition(data.idx);
+                }
+            } catch(e) {}
+        },
+        selectCondition(idx) {
+            if (this.stageAnswered) return;
+            this.playSound('click');
+            this.slottedCondition = idx;
+        },
+        executeCondition() {
+            if (this.slottedCondition === null || this.stageAnswered) return;
             this.stageAnswered = true;
-            this.selectedAnswer = idx;
-            this.lastAnswerCorrect = this.stages[this.currentStage].options[idx].correct;
+            this.selectedAnswer = this.slottedCondition;
+            this.lastAnswerCorrect = this.stages[this.currentStage].options[this.slottedCondition].correct;
             if (this.lastAnswerCorrect) {
                 this.correctAnswers++;
                 this.playSound('win');
             } else {
                 this.playSound('oops');
             }
-        },
-        getOptionClass(idx) {
-            if (!this.stageAnswered) return 'border-gray-200 bg-white hover:border-primary hover:bg-primary/5';
-            const opt = this.stages[this.currentStage].options[idx];
-            if (opt.correct) return 'border-emerald-500 bg-emerald-50 text-emerald-800 font-bold';
-            if (idx === this.selectedAnswer) return 'border-red-400 bg-red-50 text-red-700 font-bold';
-            return 'border-gray-200 bg-white opacity-40';
         },
 
-        answerPattern(idx) {
+        // ── 2. Pattern Handlers ──
+        startDragPattern(opt, idx, ev) {
             if (this.stageAnswered) return;
+            ev.dataTransfer.setData('text/plain', JSON.stringify({type: 'pattern', value: opt, idx: idx}));
+        },
+        dropPattern(ev) {
+            this.dragOverPattern = false;
+            if (this.stageAnswered) return;
+            try {
+                const data = JSON.parse(ev.dataTransfer.getData('text/plain'));
+                if (data.type === 'pattern') {
+                    this.selectPattern(data.value, data.idx);
+                }
+            } catch(e) {}
+        },
+        selectPattern(opt, idx) {
+            if (this.stageAnswered) return;
+            this.playSound('click');
+            this.slottedPattern = { value: opt, idx: idx };
+        },
+        removeSlottedPattern() {
+            if (!this.stageAnswered) {
+                this.playSound('click');
+                this.slottedPattern = null;
+            }
+        },
+        verifyPattern() {
+            if (this.slottedPattern === null || this.stageAnswered) return;
             this.stageAnswered = true;
-            this.selectedAnswer = idx;
+            this.selectedAnswer = this.slottedPattern.idx;
             const answer = this.stages[this.currentStage].answer;
-            this.lastAnswerCorrect = this.stages[this.currentStage].options[idx] == answer;
+            this.lastAnswerCorrect = this.slottedPattern.value == answer;
             if (this.lastAnswerCorrect) {
                 this.correctAnswers++;
                 this.playSound('win');
             } else {
                 this.playSound('oops');
             }
-        },
-        getPatternOptionClass(idx) {
-            if (!this.stageAnswered) return 'border-purple-200 bg-white hover:border-purple-500 hover:bg-purple-50 text-purple-900';
-            const answer = this.stages[this.currentStage].answer;
-            if (this.stages[this.currentStage].options[idx] == answer) return 'border-emerald-500 bg-emerald-50 text-emerald-700 font-bold';
-            if (idx === this.selectedAnswer) return 'border-red-400 bg-red-50 text-red-700 font-bold';
-            return 'border-gray-200 opacity-40';
         },
 
-        answerLoop(idx) {
-            if (this.stageAnswered) return;
+        // ── 3. Loop Handlers & Live Step Simulation ──
+        startDragLoop(opt, idx, ev) {
+            if (this.stageAnswered || this.simulatingLoop) return;
+            ev.dataTransfer.setData('text/plain', JSON.stringify({type: 'loop', value: opt, idx: idx}));
+        },
+        dropLoop(ev) {
+            this.dragOverLoop = false;
+            if (this.stageAnswered || this.simulatingLoop) return;
+            try {
+                const data = JSON.parse(ev.dataTransfer.getData('text/plain'));
+                if (data.type === 'loop') {
+                    this.selectLoop(data.value, data.idx);
+                }
+            } catch(e) {}
+        },
+        selectLoop(opt, idx) {
+            if (this.stageAnswered || this.simulatingLoop) return;
+            this.playSound('click');
+            this.slottedLoop = { value: opt, idx: idx };
+            this.currentLoopStep = 0;
+        },
+        async runLoopSimulation() {
+            if (this.slottedLoop === null || this.simulatingLoop || this.stageAnswered) return;
+            this.simulatingLoop = true;
+            this.currentLoopStep = 0;
+            const total = this.slottedLoop.value;
+
+            for (let step = 1; step <= total; step++) {
+                await new Promise(r => setTimeout(r, 200));
+                this.currentLoopStep = step;
+                this.playSound('step');
+            }
+
+            await new Promise(r => setTimeout(r, 250));
+            this.simulatingLoop = false;
             this.stageAnswered = true;
-            this.selectedAnswer = idx;
+            this.selectedAnswer = this.slottedLoop.idx;
+
             const correct = this.stages[this.currentStage].correct_repeat;
-            this.lastAnswerCorrect = this.stages[this.currentStage].options_repeat[idx] == correct;
+            this.lastAnswerCorrect = total == correct;
             if (this.lastAnswerCorrect) {
                 this.correctAnswers++;
                 this.playSound('win');
             } else {
                 this.playSound('oops');
             }
-        },
-        getLoopOptionClass(idx) {
-            if (!this.stageAnswered) return 'border-emerald-200 bg-white hover:border-emerald-500 hover:bg-emerald-50 text-emerald-900';
-            const correct = this.stages[this.currentStage].correct_repeat;
-            if (this.stages[this.currentStage].options_repeat[idx] == correct) return 'border-emerald-500 bg-emerald-50 text-emerald-700 font-bold';
-            if (idx === this.selectedAnswer) return 'border-red-400 bg-red-50 text-red-700 font-bold';
-            return 'border-gray-200 opacity-40';
         },
 
         nextStage() {
@@ -1138,6 +1364,11 @@ function BlocklyGame() {
                 this.stageAnswered = false;
                 this.selectedAnswer = null;
                 this.lastAnswerCorrect = false;
+                this.slottedPattern = null;
+                this.slottedLoop = null;
+                this.slottedCondition = null;
+                this.simulatingLoop = false;
+                this.currentLoopStep = 0;
             } else {
                 const total = this.stages.length;
                 const score = Math.round((this.correctAnswers / total) * 100);
@@ -1229,6 +1460,16 @@ function BlocklyGame() {
             this.currentLevelIndex = 0;
             this.correctAnswers = 0;
             this.stageAnswered = false;
+            this.selectedAnswer = null;
+            this.lastAnswerCorrect = false;
+            this.slottedPattern = null;
+            this.dragOverPattern = false;
+            this.slottedLoop = null;
+            this.dragOverLoop = false;
+            this.simulatingLoop = false;
+            this.currentLoopStep = 0;
+            this.slottedCondition = null;
+            this.dragOverCondition = false;
             this.hintsUsed = 0;
             this.timeLeft = this.timeLimit;
             this.timerPercent = 100;

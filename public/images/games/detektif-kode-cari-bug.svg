@@ -1,0 +1,172 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgCyber" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0F172A"/>
+      <stop offset="40%" stop-color="#1E1B4B"/>
+      <stop offset="80%" stop-color="#312E81"/>
+      <stop offset="100%" stop-color="#1E1B4B"/>
+    </linearGradient>
+    <linearGradient id="hatBrown" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#92400E"/>
+      <stop offset="50%" stop-color="#78350F"/>
+      <stop offset="100%" stop-color="#451A03"/>
+    </linearGradient>
+    <linearGradient id="coatBrown" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#B45309"/>
+      <stop offset="50%" stop-color="#92400E"/>
+      <stop offset="100%" stop-color="#78350F"/>
+    </linearGradient>
+    <linearGradient id="glassGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E0F2FE" stop-opacity="0.9"/>
+      <stop offset="40%" stop-color="#38BDF8" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#0284C7" stop-opacity="0.7"/>
+    </linearGradient>
+    <linearGradient id="bugGreen" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4ADE80"/>
+      <stop offset="100%" stop-color="#16A34A"/>
+    </linearGradient>
+    <filter id="neonGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Cyber Room Background -->
+  <rect width="800" height="450" fill="url(#bgCyber)"/>
+
+  <!-- Glowing Circuit Grid Lines -->
+  <g stroke="#6366F1" stroke-width="2" opacity="0.4">
+    <path d="M 0 80 L 300 80 L 340 120 L 800 120"/>
+    <path d="M 0 160 L 220 160 L 260 200 L 800 200"/>
+    <path d="M 0 340 L 400 340 L 440 380 L 800 380"/>
+    <circle cx="300" cy="80" r="4" fill="#38BDF8"/>
+    <circle cx="220" cy="160" r="4" fill="#FDE047"/>
+    <circle cx="400" cy="340" r="4" fill="#38BDF8"/>
+  </g>
+
+  <!-- Glowing Digital Code Streams in Background -->
+  <g font-family="monospace" font-size="12" fill="#22C55E" opacity="0.35" font-weight="bold">
+    <text x="40" y="50">01010101 &lt;DEBUG&gt;</text>
+    <text x="40" y="70">while(searching) {</text>
+    <text x="60" y="90">inspect(bug);</text>
+    <text x="40" y="110">}</text>
+    <text x="650" y="50">SYSTEM_ERR: 0x4B</text>
+    <text x="650" y="70">PATCH_READY: TRUE</text>
+    <text x="650" y="90">RETURN_VALID;</text>
+  </g>
+
+  <!-- Circuit Console Desk at Bottom -->
+  <rect x="0" y="320" width="800" height="130" fill="#0F172A" stroke="#4338CA" stroke-width="4"/>
+  <path d="M 0 350 L 800 350" stroke="#38BDF8" stroke-width="3" stroke-dasharray="16 8"/>
+
+  <!-- Cute Green Bug Monster (Left Console) -->
+  <g transform="translate(100, 270)">
+    <!-- Slime Body -->
+    <path d="M 20 60 C 10 40 20 15 45 15 C 70 15 80 40 70 60 C 65 68 25 68 20 60 Z" fill="url(#bugGreen)" stroke="#14532D" stroke-width="3"/>
+    <!-- Antennae -->
+    <path d="M 35 15 Q 25 0 20 5" fill="none" stroke="#16A34A" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="20" cy="5" r="4" fill="#FDE047"/>
+    <path d="M 55 15 Q 65 0 70 5" fill="none" stroke="#16A34A" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="70" cy="5" r="4" fill="#FDE047"/>
+    <!-- Surprised / Cute Eyes -->
+    <circle cx="35" cy="35" r="9" fill="#FFF" stroke="#14532D" stroke-width="2"/>
+    <circle cx="35" cy="35" r="4" fill="#0F172A"/>
+    <circle cx="55" cy="35" r="9" fill="#FFF" stroke="#14532D" stroke-width="2"/>
+    <circle cx="55" cy="35" r="4" fill="#0F172A"/>
+    <!-- Open Mouth -->
+    <ellipse cx="45" cy="50" rx="7" ry="5" fill="#14532D"/>
+    <!-- Little bug feet -->
+    <ellipse cx="25" cy="62" rx="7" ry="4" fill="#15803D"/>
+    <ellipse cx="65" cy="62" rx="7" ry="4" fill="#15803D"/>
+  </g>
+
+  <!-- Cute Purple Spider Bug (Right Console) -->
+  <g transform="translate(620, 275)">
+    <!-- Spider Legs -->
+    <path d="M 20 35 Q -5 20 -15 35" fill="none" stroke="#6D28D9" stroke-width="3" stroke-linecap="round"/>
+    <path d="M 20 45 Q -5 45 -12 60" fill="none" stroke="#6D28D9" stroke-width="3" stroke-linecap="round"/>
+    <path d="M 60 35 Q 85 20 95 35" fill="none" stroke="#6D28D9" stroke-width="3" stroke-linecap="round"/>
+    <path d="M 60 45 Q 85 45 92 60" fill="none" stroke="#6D28D9" stroke-width="3" stroke-linecap="round"/>
+    <!-- Spider Body -->
+    <circle cx="40" cy="40" r="26" fill="#8B5CF6" stroke="#4C1D95" stroke-width="3"/>
+    <!-- Cute Eyes -->
+    <circle cx="32" cy="36" r="7" fill="#FFF"/>
+    <circle cx="32" cy="36" r="3" fill="#1E1B4B"/>
+    <circle cx="48" cy="36" r="7" fill="#FFF"/>
+    <circle cx="48" cy="36" r="3" fill="#1E1B4B"/>
+    <!-- Cheek Blush -->
+    <circle cx="25" cy="45" r="4" fill="#EC4899" opacity="0.7"/>
+    <circle cx="55" cy="45" r="4" fill="#EC4899" opacity="0.7"/>
+    <path d="M 37 46 Q 40 50 43 46" fill="none" stroke="#4C1D95" stroke-width="2" stroke-linecap="round"/>
+  </g>
+
+  <!-- Detective Robot Robby (Center Character) -->
+  <g transform="translate(320, 110)">
+    <!-- Robot Ears / Antennas -->
+    <rect x="-10" y="80" width="16" height="26" rx="4" fill="#38BDF8" stroke="#0F172A" stroke-width="3"/>
+    <rect x="154" y="80" width="16" height="26" rx="4" fill="#38BDF8" stroke="#0F172A" stroke-width="3"/>
+
+    <!-- Trench Coat Body -->
+    <path d="M 20 150 L 140 150 L 165 290 L -5 290 Z" fill="url(#coatBrown)" stroke="#451A03" stroke-width="4"/>
+    <!-- Trench Coat Collar -->
+    <polygon points="40,150 80,195 20,180" fill="#B45309" stroke="#451A03" stroke-width="3"/>
+    <polygon points="120,150 80,195 140,180" fill="#B45309" stroke="#451A03" stroke-width="3"/>
+    <!-- Detective Gold Badge -->
+    <polygon points="80,190 92,204 80,218 68,204" fill="#FDE047" stroke="#78350F" stroke-width="2"/>
+    <circle cx="80" cy="204" r="3" fill="#B45309"/>
+
+    <!-- Robot Head -->
+    <rect x="20" y="55" width="120" height="95" rx="28" fill="#FDE047" stroke="#0F172A" stroke-width="4"/>
+    <!-- Robot Digital Face Visor -->
+    <rect x="35" y="75" width="90" height="52" rx="14" fill="#0F172A" stroke="#1E293B" stroke-width="3"/>
+    <!-- Glowing Friendly Blue Eyes -->
+    <ellipse cx="60" cy="100" rx="14" ry="12" fill="#38BDF8" filter="url(#neonGlow)"/>
+    <ellipse cx="100" cy="100" rx="14" ry="12" fill="#38BDF8" filter="url(#neonGlow)"/>
+    <circle cx="64" cy="97" r="4" fill="#FFF"/>
+    <circle cx="104" cy="97" r="4" fill="#FFF"/>
+
+    <!-- Detective Fedora Hat -->
+    <!-- Brim -->
+    <ellipse cx="80" cy="56" rx="90" ry="18" fill="url(#hatBrown)" stroke="#451A03" stroke-width="4"/>
+    <!-- Crown -->
+    <path d="M 25 54 C 25 15 45 6 80 8 C 115 6 135 15 135 54 Z" fill="url(#hatBrown)" stroke="#451A03" stroke-width="4"/>
+    <!-- Hat Ribbon -->
+    <path d="M 25 45 C 50 48 110 48 135 45 L 135 54 C 110 56 50 56 25 54 Z" fill="#F59E0B" stroke="#78350F" stroke-width="2"/>
+  </g>
+
+  <!-- Giant Glowing Magnifying Glass (Scanning Over Bug) -->
+  <g transform="translate(190, 180) rotate(-15)">
+    <!-- Handle -->
+    <rect x="18" y="150" width="22" height="90" rx="8" fill="#92400E" stroke="#451A03" stroke-width="4"/>
+    <rect x="22" y="160" width="14" height="20" rx="2" fill="#FDE047"/>
+    <!-- Glass Rim Outer -->
+    <circle cx="28" cy="80" r="76" fill="none" stroke="#FDE047" stroke-width="12"/>
+    <circle cx="28" cy="80" r="76" fill="none" stroke="#78350F" stroke-width="3"/>
+    <!-- Glass Lens with Holographic Reflection -->
+    <circle cx="28" cy="80" r="70" fill="url(#glassGlow)"/>
+    <!-- Hologram Grid Inside Lens -->
+    <g stroke="#38BDF8" stroke-width="1.5" opacity="0.6">
+      <line x1="-30" y1="80" x2="86" y2="80"/>
+      <line x1="28" y1="22" x2="28" y2="138"/>
+      <circle cx="28" cy="80" r="30" fill="none" stroke-dasharray="4 4"/>
+    </g>
+    <!-- Magnified Bug Target Reticle -->
+    <text x="28" y="85" font-family="monospace" font-weight="900" font-size="14" fill="#FFF" text-anchor="middle">
+      BUG DETECTED!
+    </text>
+  </g>
+
+  <!-- Big Bold Cartoon Title Banner -->
+  <g transform="translate(400, 48)">
+    <rect x="-250" y="-36" width="500" height="66" rx="22" fill="#0F172A" transform="rotate(-1)"/>
+    <rect x="-248" y="-38" width="496" height="64" rx="20" fill="#3B82F6" transform="rotate(-1)"/>
+    <rect x="-244" y="-34" width="488" height="56" rx="17" fill="#FDE047" transform="rotate(-1)"/>
+    <text x="0" y="6" font-family="'Fredoka', 'Nunito', 'Arial Black', sans-serif" font-weight="900" font-size="31" fill="#0F172A" text-anchor="middle" letter-spacing="1">
+      DETEKTIF KODE: TEMUKAN BUG!
+    </text>
+    <rect x="-110" y="30" width="220" height="22" rx="11" fill="#6366F1"/>
+    <text x="0" y="45" font-family="'Fredoka', 'Nunito', sans-serif" font-weight="800" font-size="12" fill="#FFF" text-anchor="middle">
+      LACAK &amp; PERBAIKI KODE RUSAK
+    </text>
+  </g>
+</svg>

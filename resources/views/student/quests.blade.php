@@ -1,109 +1,198 @@
 @extends('layouts.app')
-@section('title', 'Pilih Quest')
+@section('title', 'Pilih Game — Cartoon Games')
 
 @section('content')
 <div class="max-w-7xl mx-auto px-4 py-8">
 
-    {{-- Header --}}
-    <div class="mb-8 slide-in">
-        <h1 class="font-display text-3xl md:text-4xl text-gray-800">🗺️ Pilih Petualanganmu!</h1>
-        <p class="text-gray-500 mt-2 font-semibold">Selesaikan quest dan kumpulkan bintang sebanyak-banyaknya! ⭐</p>
+    {{-- ── Cartoon Network Style Banner Header ── --}}
+    <div class="relative overflow-hidden rounded-3xl border-3 border-slate-900 shadow-[0_8px_0_#0f172a] bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 p-6 md:p-8 mb-8 text-white slide-in">
+        {{-- Decorative Cartoon Shapes --}}
+        <div class="absolute -right-8 -top-8 w-40 h-40 bg-yellow-400/20 rounded-full blur-xl pointer-events-none"></div>
+        <div class="absolute right-12 bottom-0 w-32 h-32 bg-cyan-400/20 rounded-full blur-lg pointer-events-none"></div>
+
+        <div class="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div class="text-center md:text-left">
+                <div class="inline-flex items-center gap-2 bg-yellow-400 text-slate-900 font-display text-xs px-3.5 py-1 rounded-full border-2 border-slate-900 shadow-[0_2px_0_#0f172a] mb-2 uppercase tracking-wide">
+                    <span>🎮</span> ARCADE PETUALANGAN KODING
+                </div>
+                <h1 class="font-display text-3xl md:text-5xl text-white drop-shadow-[0_3px_3px_rgba(0,0,0,0.4)]">
+                    Pilih Game Favoritmu!
+                </h1>
+                <p class="text-yellow-100 font-bold text-sm md:text-base mt-2 max-w-xl leading-relaxed">
+                    Setiap game punya cerita dan misi seru! Pecahkan puzzle algoritma, kumpulkan semua bintang emas, dan jadilah juara koding!
+                </p>
+            </div>
+
+            {{-- Arcade Mascot / Quick Stat Box --}}
+            <div class="bg-white/15 backdrop-blur-md border-2 border-white/30 rounded-2xl p-4 flex items-center gap-4 text-center flex-shrink-0">
+                <div class="bg-yellow-400 border-2 border-slate-900 p-2.5 rounded-xl shadow-[0_3px_0_#0f172a]">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="#D97706" aria-hidden="true">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                    </svg>
+                </div>
+                <div class="text-left">
+                    <p class="font-display text-2xl text-yellow-300 leading-none">{{ auth()->user()->total_stars }}</p>
+                    <p class="text-white text-xs font-bold mt-1">Bintang Koleksimu</p>
+                </div>
+            </div>
+        </div>
     </div>
 
-    {{-- Category Filter --}}
-    <div class="flex flex-wrap gap-3 mb-8">
+    {{-- ── Category Filter (Chunky Cartoon Buttons) ── --}}
+    <div class="flex flex-wrap gap-3 mb-8 items-center">
+        <span class="font-display text-slate-800 text-sm hidden sm:inline mr-1">Kategori:</span>
         @php
         $categories = [
-            ['value' => 'all',       'label' => 'Semua Quest',    'icon' => '🎮'],
-            ['value' => 'sequence',  'label' => 'Urutan Langkah', 'icon' => '📋'],
-            ['value' => 'condition', 'label' => 'Pilihan Kondisi','icon' => '🔀'],
-            ['value' => 'loop',      'label' => 'Pengulangan',    'icon' => '🔄'],
-            ['value' => 'pattern',   'label' => 'Pola Seru',      'icon' => '🧩'],
+            ['value' => 'all',       'label' => 'Semua Game',      'color' => 'bg-slate-900 text-white',  'tag' => '🌟'],
+            ['value' => 'sequence',  'label' => 'Urutan Langkah',  'color' => 'bg-rose-500 text-white',   'tag' => '🐾'],
+            ['value' => 'condition', 'label' => 'Pilihan Kondisi', 'color' => 'bg-sky-500 text-white',    'tag' => '🌦️'],
+            ['value' => 'loop',      'label' => 'Pengulangan',     'color' => 'bg-emerald-500 text-white','tag' => '🔄'],
+            ['value' => 'pattern',   'label' => 'Pola Seru',       'color' => 'bg-purple-600 text-white', 'tag' => '🧩'],
         ];
         @endphp
 
         @foreach($categories as $cat)
         <a href="{{ route('student.quests', ['category' => $cat['value']]) }}"
-           class="px-5 py-2.5 rounded-full font-bold text-sm transition-all duration-200 hover:scale-105 {{ $category === $cat['value'] ? 'bg-primary text-white shadow-lg shadow-primary/30' : 'bg-white text-gray-600 hover:bg-gray-100 shadow-md' }}">
-            {{ $cat['icon'] }} {{ $cat['label'] }}
+           class="btn-cn px-4 py-2 text-sm font-display transition-transform
+                  {{ $category === $cat['value']
+                      ? $cat['color'] . ' scale-105 ring-2 ring-yellow-400'
+                      : 'bg-white text-slate-700 hover:bg-slate-100' }}">
+            <span class="mr-1.5">{{ $cat['tag'] }}</span>
+            {{ $cat['label'] }}
         </a>
         @endforeach
     </div>
 
-    {{-- Quest Grid --}}
+    {{-- ── Game Grid with Pictures for Every Game! ── --}}
     @if($quests->isEmpty())
-    <div class="text-center py-20">
-        <div class="text-7xl mb-4 animate-bounce">🔍</div>
-        <h3 class="font-display text-2xl text-gray-600">Belum ada quest di sini</h3>
-        <p class="text-gray-400 mt-2">Quest baru akan segera hadir!</p>
+    <div class="text-center py-20 bg-white rounded-3xl border-3 border-slate-900 shadow-[0_6px_0_#0f172a] p-8">
+        <div class="w-20 h-20 rounded-2xl bg-yellow-100 border-2.5 border-slate-900 flex items-center justify-center mx-auto mb-4">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+            </svg>
+        </div>
+        <h3 class="font-display text-2xl text-slate-800">Ups, belum ada game di kategori ini!</h3>
+        <p class="text-slate-500 mt-2 font-bold text-sm">Pilih kategori lain atau cek lagi nanti ya!</p>
+        <a href="{{ route('student.quests') }}" class="btn-cn bg-yellow-400 text-slate-900 px-6 py-2.5 mt-4 text-base">
+            Lihat Semua Game
+        </a>
     </div>
     @else
     <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         @foreach($quests as $i => $quest)
         @php $progress = $progressMap[$quest->id] ?? null; @endphp
 
-        <div class="bg-white rounded-3xl shadow-lg overflow-hidden card-hover slide-in-delay-{{ ($i % 3) + 1 }} border-2 border-transparent hover:border-primary/20">
-            {{-- Color Bar --}}
-            <div class="h-2" style="background: {{ $quest->theme_color }}"></div>
+        <div class="cn-card group flex flex-col overflow-hidden slide-in-delay-{{ ($i % 3) + 1 }}">
 
-            <div class="p-6">
-                {{-- Header --}}
-                <div class="flex items-start justify-between mb-4">
-                    <div class="text-5xl" style="animation: float {{ 2 + $i * 0.3 }}s ease-in-out infinite">
-                        {{ $quest->character_emoji }}
-                    </div>
-                    <div class="text-right space-y-1">
-                        <span class="inline-block text-xs font-black px-3 py-1 rounded-full {{ $quest->difficulty_color }} shadow-sm">
-                            Level {{ $quest->difficulty }}: {{ $quest->difficulty_label }}
-                        </span>
-                        <span class="block text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700">
-                            Kelas {{ $quest->min_grade }}-{{ $quest->max_grade }} SD
-                        </span>
-                        <span class="block text-[11px] font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
-                            {{ $quest->category_icon }} {{ $quest->category_label }}
-                        </span>
-                    </div>
+            {{-- ── GAME COVER IMAGE (Cartoon Network Poster) ── --}}
+            <div class="relative aspect-video w-full overflow-hidden bg-slate-900 border-b-3 border-slate-900">
+                <img src="{{ $quest->thumbnail_url }}"
+                     alt="Cover game {{ $quest->title }}"
+                     class="w-full h-full object-cover group-hover:scale-108 transition-transform duration-300 ease-out"
+                     loading="lazy">
+
+                {{-- Badges Overlaid on Picture --}}
+                <div class="absolute top-3 left-3 flex flex-wrap gap-2">
+                    <span class="cn-sticker bg-yellow-300 text-slate-900">
+                        {{ $quest->category_label }}
+                    </span>
+                    <span class="cn-sticker bg-white/95 text-slate-900 text-[11px]">
+                        Kelas {{ $quest->min_grade }}-{{ $quest->max_grade }}
+                    </span>
                 </div>
 
-                {{-- Title & Desc --}}
-                <h3 class="font-display text-xl text-gray-800 leading-tight">{{ $quest->title }}</h3>
-                <p class="text-gray-500 text-sm mt-2 line-clamp-2">{{ $quest->description }}</p>
-
-                {{-- Progress Stars --}}
-                @if($progress && $progress->status === 'completed')
-                <div class="mt-3 flex items-center gap-1">
-                    @for($s = 0; $s < 3; $s++)
-                        <span class="text-xl {{ $s < $progress->stars_earned ? 'text-yellow-400' : 'text-gray-200' }}">
-                            {{ $s < $progress->stars_earned ? '⭐' : '☆' }}
-                        </span>
-                    @endfor
-                    <span class="text-xs text-gray-500 font-semibold ml-1">{{ $progress->stars_earned }}/3 bintang</span>
-                </div>
-                @endif
-
-                {{-- Info Row --}}
-                <div class="flex items-center gap-4 mt-4 text-xs text-gray-400 font-semibold">
-                    <span>⭐ Max {{ $quest->max_stars }}</span>
-                    <span>⚡ +{{ $quest->xp_reward }} XP</span>
-                    <span>⏱️ {{ $quest->time_limit_minutes }} mnt</span>
+                <div class="absolute top-3 right-3">
+                    <span class="cn-sticker {{ $quest->difficulty === 1 ? 'bg-emerald-400 text-slate-900' : ($quest->difficulty === 2 ? 'bg-amber-400 text-slate-900' : 'bg-rose-500 text-white') }}">
+                        {{ $quest->difficulty_label }}
+                    </span>
                 </div>
 
-                {{-- CTA Button --}}
-                <a href="{{ route('student.quest.play', $quest->slug) }}"
-                   class="mt-4 block text-center text-white font-black py-3 rounded-xl transition-all duration-200 hover:opacity-90 hover:scale-105 active:scale-95 shadow-md"
-                   style="background: {{ $quest->theme_color }}">
-                    @if(!$progress)
-                        🚀 Mulai Quest!
-                    @elseif($progress->status === 'completed')
-                        🔄 Main Lagi ({{ $progress->stars_earned }}⭐)
-                    @else
-                        ▶️ Lanjutkan
-                    @endif
-                </a>
+                {{-- Character Badge Pill at bottom of image --}}
+                <div class="absolute bottom-2.5 left-3">
+                    <span class="inline-flex items-center gap-1.5 bg-slate-900/90 text-yellow-300 px-2.5 py-1 rounded-lg text-xs font-display border border-yellow-300/40">
+                        <span>{{ $quest->character_name }}</span>
+                    </span>
+                </div>
             </div>
+
+            {{-- ── Content Details ── --}}
+            <div class="p-5 flex-1 flex flex-col justify-between">
+                <div>
+                    {{-- Title --}}
+                    <h3 class="font-display text-xl text-slate-900 group-hover:text-indigo-600 transition-colors leading-snug">
+                        {{ $quest->title }}
+                    </h3>
+
+                    {{-- Description --}}
+                    <p class="text-slate-600 text-xs font-semibold mt-2 line-clamp-2 leading-relaxed">
+                        {{ $quest->description }}
+                    </p>
+
+                    {{-- Stars earned indicator (if completed) --}}
+                    @if($progress && $progress->status === 'completed')
+                    <div class="mt-3.5 inline-flex items-center gap-1 bg-yellow-100 border-2 border-yellow-400 px-2.5 py-1 rounded-xl">
+                        @for($s = 0; $s < 3; $s++)
+                        <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"
+                             fill="{{ $s < $progress->stars_earned ? '#F59E0B' : '#CBD5E1' }}">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                        </svg>
+                        @endfor
+                        <span class="font-display text-xs text-amber-800 ml-1">Selesai ({{ $progress->stars_earned }}/3 ⭐)</span>
+                    </div>
+                    @endif
+                </div>
+
+                {{-- Stats and CTA --}}
+                <div class="mt-4 pt-3 border-t-2 border-slate-100">
+                    <div class="flex items-center justify-between text-xs font-bold text-slate-500 mb-3.5">
+                        <span class="inline-flex items-center gap-1 text-amber-600">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="#F59E0B" aria-hidden="true">
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                            </svg>
+                            Maks {{ $quest->max_stars }} Bintang
+                        </span>
+                        <span class="inline-flex items-center gap-1 text-emerald-600">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                            </svg>
+                            +{{ $quest->xp_reward }} XP
+                        </span>
+                        <span class="inline-flex items-center gap-1 text-slate-500">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                            </svg>
+                            {{ $quest->time_limit_minutes }} mnt
+                        </span>
+                    </div>
+
+                    {{-- Chunky Cartoon Button --}}
+                    <a href="{{ route('student.quest.play', $quest->slug) }}"
+                       class="btn-cn w-full py-2.5 text-base text-white flex items-center justify-center gap-2"
+                       style="background: {{ $quest->theme_color ?? '#6366F1' }};">
+                        @if(!$progress)
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <polygon points="5 3 19 12 5 21 5 3"/>
+                            </svg>
+                            <span>MAINKAN SEKARANG</span>
+                        @elseif($progress->status === 'completed')
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <path d="M1 4v6h6M23 20v-6h-6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                            </svg>
+                            <span>MAIN LAGI</span>
+                        @else
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <polygon points="5 3 19 12 5 21 5 3"/>
+                            </svg>
+                            <span>LANJUTKAN</span>
+                        @endif
+                    </a>
+                </div>
+            </div>
+
         </div>
         @endforeach
     </div>
     @endif
+
 </div>
 @endsection

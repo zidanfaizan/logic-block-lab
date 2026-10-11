@@ -94,9 +94,30 @@ class Quest extends Model
 
     public function getThumbnailUrlAttribute(): string
     {
-        if ($this->thumbnail) {
+        $map = [
+            'bantu-koki-menemukan-ikan' => 'images/games/bantu-koki-menemukan-ikan.jpg',
+            'rara-dan-cuaca'            => 'images/games/rara-dan-cuaca.jpg',
+            'lanjutkan-pola-ajaib'      => 'images/games/lanjutkan-pola-ajaib.jpg',
+            'robot-pembersih-kamar'     => 'images/games/robot-pembersih-kamar.jpg',
+            'penjelajah-antariksa-kiki' => 'images/games/penjelajah-antariksa-kiki.jpg',
+            'detektif-kode-cari-bug'    => 'images/games/detektif-kode-cari-bug.svg',
+            'kunci-istana-ajaib'        => 'images/games/kunci-istana-ajaib.svg',
+            'pabrik-mainan-otomatis'    => 'images/games/pabrik-mainan-otomatis.svg',
+        ];
+
+        if (isset($map[$this->slug])) {
+            return asset($map[$this->slug]);
+        }
+
+        if ($this->thumbnail && file_exists(public_path('images/quests/' . $this->thumbnail))) {
             return asset('images/quests/' . $this->thumbnail);
         }
-        return asset('images/quests/default.png');
+
+        return asset('images/games/bantu-koki-menemukan-ikan.jpg');
+    }
+
+    public function getGameImageAttribute(): string
+    {
+        return $this->thumbnail_url;
     }
 }
