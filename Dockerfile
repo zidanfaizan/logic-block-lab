@@ -32,9 +32,11 @@ RUN composer install --no-dev --optimize-autoloader
 RUN npm install && npm run build
 
 # Prepare SQLite DB & permissions
-RUN touch database/database.sqlite \
+RUN mkdir -p /app/database /app/storage /app/bootstrap/cache \
+    && touch /app/database/database.sqlite \
+    && chmod -R 777 /app/storage /app/bootstrap/cache /app/database \
     && chown -R www-data:www-data /app/storage /app/bootstrap/cache /app/database
 
 EXPOSE 8000
 
-CMD ["sh", "-c", "php artisan migrate --force && php artisan db:seed --force && php artisan serve --host=0.0.0.0 --port=8000"]
+CMD ["sh", "-c", "chmod -R 777 /app/database /app/storage /app/bootstrap/cache && php artisan migrate --force && php artisan db:seed --force && chmod -R 777 /app/database /app/storage /app/bootstrap/cache && php artisan serve --host=0.0.0.0 --port=8000"]

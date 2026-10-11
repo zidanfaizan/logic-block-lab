@@ -49,6 +49,32 @@ Route::get('/run-migrations', function () {
         }
         @chmod($dir, 0777);
 
+        // Check if $dir and $dbPath are writable
+        $isDirWritable = is_dir($dir) && is_writable($dir);
+        $isFileWritable = file_exists($dbPath) ? is_writable($dbPath) : $isDirWritable;
+
+        if (!$isDirWritable || !$isFileWritable) {
+            $safeDbPath = storage_path('database.sqlite');
+            $storageDir = storage_path();
+            if (!is_dir($storageDir)) {
+                @mkdir($storageDir, 0777, true);
+            }
+            @chmod($storageDir, 0777);
+
+            if (file_exists($dbPath) && !file_exists($safeDbPath)) {
+                @copy($dbPath, $safeDbPath);
+            }
+
+            if (!file_exists($safeDbPath)) {
+                @touch($safeDbPath);
+            }
+            @chmod($safeDbPath, 0666);
+
+            config(['database.connections.sqlite.database' => $safeDbPath]);
+            \Illuminate\Support\Facades\DB::purge('sqlite');
+            $dbPath = $safeDbPath;
+        }
+
         $fileCreated = false;
         if (!file_exists($dbPath)) {
             @touch($dbPath);
@@ -68,6 +94,8 @@ Route::get('/run-migrations', function () {
             'status' => 'success',
             'message' => 'Database SQLite berhasil diinisialisasi, dimigrasi, dan di-seed!',
             'database_path' => $dbPath,
+            'is_writable' => is_writable($dbPath),
+            'dir_is_writable' => is_writable(dirname($dbPath)),
             'file_created' => $fileCreated,
             'migrate_output' => trim($migrateOutput),
             'seed_output' => trim($seedOutput),

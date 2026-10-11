@@ -29,6 +29,34 @@ class AppServiceProvider extends ServiceProvider
                     }
                     @chmod($dir, 0777);
 
+                    // Check if directory or file is read-only (common in Docker/Nixpacks where /app/database is root:root 755)
+                    $isDirWritable = is_dir($dir) && is_writable($dir);
+                    $isFileWritable = file_exists($dbPath) ? is_writable($dbPath) : $isDirWritable;
+
+                    if (!$isDirWritable || !$isFileWritable) {
+                        $safeDbPath = storage_path('database.sqlite');
+                        $storageDir = storage_path();
+                        if (!is_dir($storageDir)) {
+                            @mkdir($storageDir, 0777, true);
+                        }
+                        @chmod($storageDir, 0777);
+
+                        // If original file exists, copy schema and data to writable storage
+                        if (file_exists($dbPath) && !file_exists($safeDbPath)) {
+                            @copy($dbPath, $safeDbPath);
+                        }
+
+                        if (!file_exists($safeDbPath)) {
+                            @touch($safeDbPath);
+                        }
+                        @chmod($safeDbPath, 0666);
+
+                        // Point connection to writable storage database
+                        config(['database.connections.sqlite.database' => $safeDbPath]);
+                        \Illuminate\Support\Facades\DB::purge('sqlite');
+                        $dbPath = $safeDbPath;
+                    }
+
                     if (!file_exists($dbPath)) {
                         @touch($dbPath);
                         @chmod($dbPath, 0666);
